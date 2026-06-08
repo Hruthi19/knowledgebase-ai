@@ -128,9 +128,8 @@ The RAG pipeline has two main flows:
 
 <!-- Add screenshots here after running the app -->
 
-| Upload & Sidebar | Chat with Citations |
-|-----------------|---------------------|
-| image.png |
+<img width="1280" height="713" alt="Screenshot 2026-06-08 at 2 58 57 PM" src="https://github.com/user-attachments/assets/e7ea1e00-a2e7-4651-9d33-0537b981cf78" />
+
 
 ---
 
