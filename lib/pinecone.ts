@@ -7,13 +7,11 @@ const CHUNK_RECORD_TYPE = "chunk";
 const REGISTRY_RECORD_TYPE = "registry";
 
 let client: Pinecone | null = null;
-let zeroVector: number[] | null = null;
 
-function getZeroVector(): number[] {
-  if (!zeroVector) {
-    zeroVector = Array.from({ length: EMBEDDING_DIMENSION }, () => 0);
-  }
-  return zeroVector;
+function getRegistryPlaceholderVector(): number[] {
+  const vector = Array.from({ length: EMBEDDING_DIMENSION }, () => 0);
+  vector[0] = 1;
+  return vector;
 }
 
 export function registryIdFor(docId: string): string {
@@ -138,7 +136,7 @@ export async function upsertRegistryRecord(metadata: {
   await index.upsert([
     {
       id: registryIdFor(metadata.docId),
-      values: getZeroVector(),
+      values: getRegistryPlaceholderVector(),
       metadata: {
         recordType: REGISTRY_RECORD_TYPE,
         docId: metadata.docId,
