@@ -33,8 +33,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# chroma data
-/chroma_data
-
 # document registry
 /data

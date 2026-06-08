@@ -1,6 +1,5 @@
-import { IncludeEnum } from "chromadb";
 import { embedText } from "@/lib/embeddings";
-import { getCollection } from "@/lib/chroma";
+import { queryChunks } from "@/lib/pinecone";
 import type { SourceChunk } from "@/types";
 
 const TOP_K = 5;
@@ -48,34 +47,21 @@ export async function retrieveRelevantChunks(
   docIds?: string[]
 ): Promise<SourceChunk[]> {
   const queryEmbedding = await embedText(query);
-  const collection = await getCollection();
-
-  const where =
-    docIds && docIds.length > 0
-      ? { docId: { $in: docIds } }
-      : undefined;
-
-  const results = await collection.query({
-    queryEmbeddings: [queryEmbedding],
-    nResults: TOP_K,
-    ...(where ? { where } : {}),
-    include: [IncludeEnum.Documents, IncludeEnum.Metadatas, IncludeEnum.Distances],
-  });
-
-  const documents = results.documents?.[0] ?? [];
-  const metadatas = results.metadatas?.[0] ?? [];
-
+  const results = await queryChunks(queryEmbedding, TOP_K, docIds);
+  const matches = results.matches ?? [];
   const chunks: SourceChunk[] = [];
 
-  for (let i = 0; i < documents.length; i++) {
-    const content = documents[i];
-    const metadata = metadatas[i];
+  for (const match of matches) {
+    const metadata = match.metadata;
 
-    if (content && metadata) {
-      chunks.push(
-        metadataToSourceChunk(content, metadata as Record<string, unknown>)
-      );
-    }
+    if (!metadata) continue;
+
+    const content = String(metadata.content ?? "");
+    if (!content) continue;
+
+    chunks.push(
+      metadataToSourceChunk(content, metadata as Record<string, unknown>)
+    );
   }
 
   return chunks;

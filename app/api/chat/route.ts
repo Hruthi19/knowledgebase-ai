@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     const message = getErrorMessage(error);
 
-    if (message.includes("ChromaDB")) {
+    if (message.includes("Pinecone")) {
       return new Response(JSON.stringify({ error: message }), {
         status: 503,
         headers: { "Content-Type": "application/json" },

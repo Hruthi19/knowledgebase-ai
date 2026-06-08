@@ -1,6 +1,6 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { v4 as uuidv4 } from "uuid";
-import { getCollection } from "@/lib/chroma";
+import { upsertChunks } from "@/lib/pinecone";
 import { embedTexts } from "@/lib/embeddings";
 import { addDocument } from "@/lib/documents";
 import { parsePdf } from "@/lib/parsers/pdf";
@@ -46,7 +46,6 @@ async function storeChunks(
 
   const texts = chunks.map((c) => c.text);
   const embeddings = await embedTexts(texts);
-  const collection = await getCollection();
 
   const ids = chunks.map((_, i) => `${docId}-chunk-${i}`);
   const metadatas = chunks.map((chunk, i) => ({
@@ -55,15 +54,11 @@ async function storeChunks(
     chunkIndex: i,
     totalChunks: chunks.length,
     sourceType,
+    content: chunk.text,
     ...(chunk.pageNumber !== undefined ? { pageNumber: chunk.pageNumber } : {}),
   }));
 
-  await collection.add({
-    ids,
-    embeddings,
-    documents: texts,
-    metadatas,
-  });
+  await upsertChunks(ids, embeddings, metadatas);
 
   return chunks.length;
 }

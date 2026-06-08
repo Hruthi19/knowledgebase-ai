@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCollection, resetCollection } from "@/lib/chroma";
+import { deleteAllChunks, deleteChunksByDocId } from "@/lib/pinecone";
 import { removeDocument, clearAllDocuments } from "@/lib/documents";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -14,15 +14,11 @@ export async function DELETE(
 
     if (id === "all") {
       await clearAllDocuments();
-      await resetCollection();
+      await deleteAllChunks();
       return NextResponse.json({ success: true });
     }
 
-    const collection = await getCollection();
-
-    await collection.delete({
-      where: { docId: id },
-    });
+    await deleteChunksByDocId(id);
 
     const removed = await removeDocument(id);
 
@@ -39,7 +35,7 @@ export async function DELETE(
 
     const message = getErrorMessage(error);
 
-    if (message.includes("ChromaDB")) {
+    if (message.includes("Pinecone")) {
       return NextResponse.json({ success: false, error: message }, { status: 503 });
     }
 

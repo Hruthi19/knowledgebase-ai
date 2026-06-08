@@ -2,7 +2,7 @@
 
 A production-quality RAG (Retrieval-Augmented Generation) knowledge assistant that lets you upload documents or ingest web pages, then chat with an AI that answers questions using only your ingested content — with inline source citations for every answer.
 
-Built with **Next.js 14**, **LangChain.js**, **OpenAI**, and **ChromaDB**.
+Built with **Next.js 14**, **LangChain.js**, **OpenAI**, and **Pinecone**.
 
 ---
 
@@ -26,14 +26,14 @@ Built with **Next.js 14**, **LangChain.js**, **OpenAI**, and **ChromaDB**.
           ▼                               ▼
 ┌─────────────────────┐       ┌─────────────────────────────────┐
 │   Ingest Pipeline   │       │       RAG Query Pipeline        │
-│  Parse → Chunk →    │       │  Embed query → ChromaDB search  │
+│  Parse → Chunk →    │       │  Embed query → Pinecone search  │
 │  Embed → Store      │       │  → Context → GPT-4o-mini stream │
 └─────────┬───────────┘       └───────────────┬─────────────────┘
           │                                     │
           ▼                                     ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              ChromaDB (Docker)  +  OpenAI API                   │
-│         text-embedding-3-small          gpt-4o-mini               │
+│              Pinecone (cloud)  +  OpenAI API                    │
+│         text-embedding-3-small          gpt-4o-mini             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -48,7 +48,7 @@ Built with **Next.js 14**, **LangChain.js**, **OpenAI**, and **ChromaDB**.
 | AI / RAG | LangChain.js, OpenAI API |
 | Embeddings | `text-embedding-3-small` |
 | Chat model | `gpt-4o-mini` |
-| Vector store | ChromaDB (local, Docker) |
+| Vector store | Pinecone (cloud) |
 | File parsing | pdf-parse, mammoth, cheerio + axios |
 | Streaming | Vercel AI SDK (`useChat`) |
 
@@ -60,8 +60,8 @@ Built with **Next.js 14**, **LangChain.js**, **OpenAI**, and **ChromaDB**.
 ### Prerequisites
 
 - Node.js 20+
-- Docker & Docker Compose
 - OpenAI API key
+- Pinecone account and index
 
 ### 1. Clone and install
 
@@ -71,13 +71,14 @@ cd knowledgebase-ai
 npm install --legacy-peer-deps
 ```
 
-### 2. Start ChromaDB
+### 2. Create a Pinecone index
 
-```bash
-docker-compose up -d
-```
-
-ChromaDB will be available at `http://localhost:8000`.
+1. Sign up at [pinecone.io](https://www.pinecone.io/)
+2. Create a **serverless** index with:
+   - **Name:** `knowledgebase` (or set `PINECONE_INDEX_NAME`)
+   - **Dimensions:** `1536` (matches `text-embedding-3-small`)
+   - **Metric:** `cosine`
+3. Copy your API key from the Pinecone console
 
 ### 3. Configure environment variables
 
@@ -89,7 +90,8 @@ Edit `.env.local`:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
-CHROMA_URL=http://localhost:8000
+PINECONE_API_KEY=your_pinecone_api_key_here
+PINECONE_INDEX_NAME=knowledgebase
 ```
 
 ### 4. Run the dev server
@@ -120,12 +122,12 @@ The RAG pipeline has two main flows:
 2. **Parse** — Raw text is extracted using the appropriate parser
 3. **Chunk** — Text is split into 800-token chunks with 100-token overlap (LangChain `RecursiveCharacterTextSplitter`)
 4. **Embed** — Each chunk is embedded with OpenAI `text-embedding-3-small`
-5. **Store** — Vectors + metadata are saved in ChromaDB
+5. **Store** — Vectors + metadata are saved in Pinecone
 
 ### Query
 
 1. **Embed** — The user's question is embedded with the same model
-2. **Retrieve** — ChromaDB returns the top 5 most similar chunks (cosine similarity)
+2. **Retrieve** — Pinecone returns the top 5 most similar chunks (cosine similarity)
 3. **Assemble** — Retrieved chunks are formatted into a context string
 4. **Generate** — GPT-4o-mini streams an answer constrained to the context, with source citations
 5. **Display** — The UI shows the streamed answer with expandable source cards

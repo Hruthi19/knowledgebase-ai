@@ -2,7 +2,7 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: [
-      "chromadb",
+      "@pinecone-database/pinecone",
       "pdf-parse",
       "mammoth",
       "@langchain/community",
