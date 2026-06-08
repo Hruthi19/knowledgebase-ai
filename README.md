@@ -102,6 +102,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
+## Screenshots
+
+<!-- Add screenshots here after running the app -->
+
+<img width="1280" height="713" alt="Screenshot 2026-06-08 at 2 58 57 PM" src="https://github.com/user-attachments/assets/e7ea1e00-a2e7-4651-9d33-0537b981cf78" />
+
+---
+
 ## How It Works
 
 The RAG pipeline has two main flows:
@@ -124,25 +132,6 @@ The RAG pipeline has two main flows:
 
 ---
 
-## Screenshots
-
-<!-- Add screenshots here after running the app -->
-
-<img width="1280" height="713" alt="Screenshot 2026-06-08 at 2 58 57 PM" src="https://github.com/user-attachments/assets/e7ea1e00-a2e7-4651-9d33-0537b981cf78" />
-
-
----
-
-## Future Improvements
-
-- **Eval harness** — Automated RAG quality metrics (faithfulness, relevance, citation accuracy)
-- **Multi-user support** — Auth, per-user document collections, and access controls
-- **Reranking** — Cohere reranker on retrieved chunks for better precision
-- **Streaming citations** — Real-time source highlighting as tokens stream in
-- **Hybrid search** — Combine vector similarity with BM25 keyword search
-- **Document preview** — In-app PDF/text viewer with highlighted source passages
-
----
 
 ## License
 
