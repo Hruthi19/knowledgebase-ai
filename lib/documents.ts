@@ -1,53 +1,69 @@
-import { promises as fs } from "fs";
-import path from "path";
+import {
+  deleteChunksByDocId,
+  fetchRegistryRecords,
+  listRegistryIds,
+  registryRecordExists,
+  upsertRegistryRecord,
+} from "@/lib/pinecone";
 import type { Document } from "@/types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const REGISTRY_PATH = path.join(DATA_DIR, "documents.json");
+function metadataToDocument(
+  metadata: Record<string, unknown> | undefined
+): Document | null {
+  if (!metadata) return null;
 
-async function ensureDataDir(): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-}
+  const docId = String(metadata.docId ?? "");
+  const docName = String(metadata.docName ?? "");
+  const type = metadata.type as Document["type"];
+  const chunkCount = Number(metadata.chunkCount ?? 0);
+  const createdAt = String(metadata.createdAt ?? "");
 
-async function readRegistry(): Promise<Document[]> {
-  try {
-    const raw = await fs.readFile(REGISTRY_PATH, "utf-8");
-    return JSON.parse(raw) as Document[];
-  } catch {
-    return [];
+  if (!docId || !docName || !type || !createdAt) {
+    return null;
   }
-}
 
-async function writeRegistry(documents: Document[]): Promise<void> {
-  await ensureDataDir();
-  await fs.writeFile(REGISTRY_PATH, JSON.stringify(documents, null, 2), "utf-8");
+  return {
+    id: docId,
+    name: docName,
+    type,
+    chunkCount,
+    createdAt,
+  };
 }
 
 export async function listDocuments(): Promise<Document[]> {
-  const documents = await readRegistry();
+  const ids = await listRegistryIds();
+  const records = await fetchRegistryRecords(ids);
+
+  const documents = Object.values(records)
+    .map((record) => metadataToDocument(record.metadata as Record<string, unknown>))
+    .filter((document): document is Document => document !== null);
+
   return documents.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
 
 export async function addDocument(document: Document): Promise<void> {
-  const documents = await readRegistry();
-  documents.push(document);
-  await writeRegistry(documents);
+  await upsertRegistryRecord({
+    docId: document.id,
+    docName: document.name,
+    type: document.type,
+    chunkCount: document.chunkCount,
+    createdAt: document.createdAt,
+  });
 }
 
 export async function removeDocument(docId: string): Promise<boolean> {
-  const documents = await readRegistry();
-  const filtered = documents.filter((doc) => doc.id !== docId);
-
-  if (filtered.length === documents.length) {
+  const exists = await registryRecordExists(docId);
+  if (!exists) {
     return false;
   }
 
-  await writeRegistry(filtered);
+  await deleteChunksByDocId(docId);
   return true;
 }
 
 export async function clearAllDocuments(): Promise<void> {
-  await writeRegistry([]);
+  // Vectors (chunks + registry records) are cleared by deleteAllChunks() in the API route.
 }

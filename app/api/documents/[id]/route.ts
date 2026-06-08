@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteAllChunks, deleteChunksByDocId } from "@/lib/pinecone";
+import { deleteAllChunks } from "@/lib/pinecone";
 import { removeDocument, clearAllDocuments } from "@/lib/documents";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -17,8 +17,6 @@ export async function DELETE(
       await deleteAllChunks();
       return NextResponse.json({ success: true });
     }
-
-    await deleteChunksByDocId(id);
 
     const removed = await removeDocument(id);
 
