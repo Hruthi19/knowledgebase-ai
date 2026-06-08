@@ -51,8 +51,7 @@ Built with **Next.js 14**, **LangChain.js**, **OpenAI**, and **ChromaDB**.
 | Vector store | ChromaDB (local, Docker) |
 | File parsing | pdf-parse, mammoth, cheerio + axios |
 | Streaming | Vercel AI SDK (`useChat`) |
-| State | Zustand (with localStorage persist) |
-| Notifications | Sonner |
+
 
 ---
 
@@ -131,7 +130,7 @@ The RAG pipeline has two main flows:
 
 | Upload & Sidebar | Chat with Citations |
 |-----------------|---------------------|
-| _screenshot-placeholder.png_ | _screenshot-placeholder.png_ |
+| image.png |
 
 ---
 
